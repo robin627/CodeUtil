@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+	<settings cacheModelsEnabled="true" enhancementEnabled="false"
+		lazyLoadingEnabled="false" maxRequests="300" maxSessions="300"
+		maxTransactions="50" useStatementNamespaces="false" />
+	
+	<sqlMap resource="ibatis/database_mapping.xml" />
+	
+	<!-- 	config demo start    -->
+#foreach( $column in $columns )
+	<sqlMap resource="mybatis/customer-mapping.xml" />
+	<sqlMap resource="mybatis/customer-impl-mapping.xml" />
+#end
+	<!-- 	config demo end    -->
+	
+</sqlMapConfig>

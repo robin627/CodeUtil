@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd 
+         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd"
+	default-autowire="byName">
+
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:properties/sys.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 数据库 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${jdbc.driverClassName}"></property>
+		<property name="url" value="${jdbc.url}"></property>
+		<property name="username" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+<!-- 		<property name="initialSize" value="${jdbc.initialsize}" /> -->
+<!-- 		<property name="maxActive" value="${jdbc.maxactive}"></property> -->
+<!-- 		<property name="maxIdle" value="${jdbc.maxidle}"></property> -->
+<!-- 		<property name="minIdle" value="${jdbc.minidle}" /> -->
+<!-- 		<property name="maxWait" value="${jdbc.maxwait}"></property> -->
+<!-- 		<property name="defaultAutoCommit" value="${jdbc.defaultautocommit}"></property> -->
+<!-- 		<property name="validationQuery" value="${jdbc.validationQuery}"></property> -->
+	</bean>
+
+	<bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:ibatis/sqlmap.xml" />
+	</bean>
+
+	<!-- dao -->
+	<bean id="databaseDao" class="com.jala.tool.dao.DatabaseDaoImpl">
+		<property name="sqlMapClient" ref="sqlMapClient" />
+	</bean>
+	
+	<bean id="velocitySupport" class="com.jala.tool.utils.VelocitySupport">
+	</bean>
+	
+	<bean id="db2oSupport" class="com.jala.tool.db2o.Db2oSupport">
+	    <property name="versionIDColumnName" value="${versionIDColumnName}" />
+		<property name="versionTimeColumnName" value="${versionTimeColumnName}" />		
+	</bean>
+
+	<!-- service -->
+	<bean id="buildService" class="com.jala.tool.service.BuildServiceImpl">
+		<property name="databaseDao" ref="databaseDao" />
+		<property name="velocitySupport" ref="velocitySupport" />
+		<property name="db2oSupport" ref="db2oSupport" />
+		
+		<property name="typeMappings">
+			<map>
+				<entry key="mysql2java" value-ref="mysql2java"></entry>
+				<entry key="mssql2java" value-ref="mssql2java"></entry>
+				<entry key="oracle2java" value-ref="oracle2java"></entry>
+			</map>
+		</property>
+		<property name="dbGetTimeMethedNameMapping">
+			<map>
+				<entry key="mysql" value="now()"></entry>
+				<entry key="oracle" value="systimestamp"></entry>
+				<entry key="mssql" value="GETDATE()"></entry>
+			</map>
+		</property>		
+	</bean>
+	
+	<import resource="mysql2object-typemapping.xml" />
+	<import resource="mssql2object-typemapping.xml" />
+	<import resource="oracle2object-typemapping.xml" />
+
+</beans>

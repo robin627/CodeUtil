@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="dao">
+	<resultMap id="oracle_tableInfo" class="com.jala.tool.entity.TableInfo">
+		<result property="tableName" column="table_name" />
+		<result property="tableComment" column="comments" />
+	</resultMap>
+
+	<resultMap id="oracle_columnInfo" class="com.jala.tool.entity.ColumnInfo">
+		<result property="columnName" column="column_name" />
+		<result property="columnType" column="data_type" />
+		<result property="columnNullable" column="is_nullable" />
+		<result property="columnCharLength" column="data_length"  nullValue="0"/>
+		<result property="columnNumberPrecision" column="data_precision"  nullValue="0"/>
+		<result property="columnNumberScale" column="data_scale"  nullValue="0"/>
+		<result property="columnKey" column="CONSTRAINT_TYPE" />
+		<result property="columnComment" column="comments" />
+		<result property="columnPosition" column="column_id" nullValue="0"/>
+		<result property="columnIsNumeric" column="is_numeric"/>	
+		<result property="columnIsPrimaryKey" column="is_primarykey"/>	
+	</resultMap>
+
+	<select id="oracle-select-tableinfo" parameterClass="java.util.Map"
+		resultMap="oracle_tableInfo">
+		  select lower(table_name) as table_name,comments from user_tab_comments
+		  where table_name = Upper(#tablename#)
+		  and table_type = 'TABLE'
+	</select>
+
+	<select id="oracle-select-columninfo" parameterClass="java.util.Map"
+		resultMap="oracle_columnInfo">		
+		select 
+		utc.column_name,
+		utc.data_type,
+		case utc.nullable when 'Y' then '1' when 'N' then '0' else '1' end as is_nullable,
+		utc.data_length,
+		utc.data_precision,
+		utc.data_scale,
+		(
+		    select uc.CONSTRAINT_TYPE
+		    from user_cons_columns ucoc  inner join user_constraints uc on ucoc.constraint_NAME = uc.constraint_NAME
+		    where ucoc.TABLE_NAME = utc.TABLE_NAME
+		    and ucoc.column_name = utc.COLUMN_NAME
+		    and uc.CONSTRAINT_TYPE = 'P'
+		    and ucoc.owner = upper(#databaseOrSchema#)
+		)as CONSTRAINT_TYPE,
+		ucc.comments,
+		utc.column_id,
+		(case (select 1 from dual where utc.data_type in('NUMBER','LONG','FLOAT')) when 1 then '1' else '0' end) as is_numeric,
+		case (
+		    select  uc.CONSTRAINT_TYPE
+		    from user_cons_columns ucoc  inner join user_constraints uc on ucoc.constraint_NAME = uc.constraint_NAME
+		    where ucoc.TABLE_NAME = utc.TABLE_NAME
+		    and ucoc.column_name = utc.COLUMN_NAME
+		    and uc.CONSTRAINT_TYPE = 'P'
+		    and ucoc.owner = upper(#databaseOrSchema#)
+		)  when 'P' then '1' else '0' end as is_primarykey
+		from user_tab_columns utc left join user_col_comments ucc on utc.TABLE_NAME = ucc.table_name and utc.COLUMN_NAME = ucc.column_name
+		where utc.table_name = upper(#tablename#)
+	</select>
+
+	<resultMap id="mysql_tableInfo" class="com.jala.tool.entity.TableInfo">
+		<result property="tableName" column="table_name" />
+		<result property="tableComment" column="table_comment" />
+	</resultMap>
+
+	<resultMap id="mysql_columnInfo" class="com.jala.tool.entity.ColumnInfo">
+		<result property="columnName" column="column_name" />
+		<result property="columnType" column="data_type" />
+		<result property="columnNullable" column="is_nullable" />
+		<result property="columnCharLength" column="character_maximum_length"  nullValue="0"/>
+		<result property="columnNumberPrecision" column="numeric_precision"  nullValue="0"/>
+		<result property="columnNumberScale" column="numeric_scale"  nullValue="0"/>
+		<result property="columnKey" column="column_key" />
+		<result property="columnComment" column="column_comment" />
+		<result property="columnPosition" column="ordinal_position" nullValue="0"/>
+		<result property="columnIsNumeric" column="is_numeric"/>	
+		<result property="columnIsPrimaryKey" column="is_primarykey"/>	
+	</resultMap>
+
+	<select id="mysql-select-tableinfo" parameterClass="java.util.HashMap"
+		resultMap="mysql_tableInfo">
+		select table_name,table_comment from information_schema.tables
+		where upper(table_schema) = upper(#databaseOrSchema#)
+		and upper(table_name) = upper(#tablename#)
+	</select>
+
+	<!-- 需要识别：主键，是否为数字，是否为空，主键字段 -->
+	<select id="mysql-select-columninfo" parameterClass="java.util.HashMap"
+		resultMap="mysql_columnInfo">
+		select
+		column_name,
+		data_type,
+		if(upper(is_nullable) = 'YES','true','false') as is_nullable,
+		character_maximum_length,
+		numeric_precision,
+		numeric_scale,
+		column_key,
+		ordinal_position,
+		column_comment,
+		if(isnull(numeric_scale),'false','true') as is_numeric,
+		if(upper(column_key)='PRI','true','false') as is_primarykey
+		from information_schema.COLUMNS
+		where upper(table_schema) = upper(#databaseOrSchema#)
+		and upper(table_name) = upper(#tablename#)
+	</select>
+
+	<resultMap id="mssql_tableInfo" class="com.jala.tool.entity.TableInfo">
+		<result property="tableName" column="table_name" />
+	</resultMap>
+
+	<resultMap id="mssql_columnInfo" class="com.jala.tool.entity.ColumnInfo">
+		<result property="columnName" column="column_name" />
+		<result property="columnType" column="data_type" />
+		<result property="columnNullable" column="is_nullable" />
+		<result property="columnCharLength" column="character_maximum_length"  nullValue="0"/>
+		<result property="columnNumberPrecision" column="numeric_precision"  nullValue="0"/>
+		<result property="columnNumberScale" column="numeric_scale"  nullValue="0"/>
+		<result property="columnKey" column="column_key" />
+		<result property="columnComment" column="column_comment" />
+		<result property="columnPosition" column="ordinal_position" nullValue="0"/>
+		<result property="columnIsPrimaryKey" column="is_primarykey"/>	
+	</resultMap>
+
+	<select id="mssql-select-tableinfo" parameterClass="java.util.HashMap"
+		resultMap="mssql_tableInfo">
+		SELECT name as table_name FROM SysObjects 
+		Where XType='U' 
+		and name = #tablename#
+	</select>
+
+	<!-- 需要识别：主键，是否为数字，是否为空，主键字段 -->
+	<select id="mssql-select-columninfo" parameterClass="java.util.HashMap"
+		resultMap="mssql_columnInfo">
+		SELECT 
+		column_name=C.name,
+		data_type=T.name,
+		is_nullable=CASE WHEN C.is_nullable=1 THEN N'true'ELSE N'false' END,
+		character_maximum_length=C.max_length,
+		numeric_precision=C.precision,
+		numeric_scale=C.scale,
+		column_key=cast(ISNULL(IDX.IndexName,N'') as nvarchar(1000)),
+		column_comment=cast(isnull(g.[value],N'') as nvarchar(1000)),
+		ordinal_position=C.column_id,
+		is_primarykey=CASE WHEN IDX.PrimaryKey=1 THEN N'true'ELSE N'false' END
+		FROM sys.columns C
+		INNER JOIN sys.objects O ON C.[object_id]=O.[object_id] AND O.type='U' AND O.is_ms_shipped=0
+		INNER JOIN sys.types T ON C.user_type_id=T.user_type_id
+		left join sys.extended_properties g on c.object_id=G.major_id and c.column_id=g.minor_id   
+		LEFT JOIN sys.extended_properties PFD ON PFD.class=1 AND C.[object_id]=PFD.major_id AND C.column_id=PFD.minor_id
+		LEFT JOIN sys.extended_properties PTB ON PTB.class=1 AND PTB.minor_id=0 AND C.[object_id]=PTB.major_id
+		LEFT JOIN 
+		(
+			SELECT 
+			IDXC.[object_id],
+			IDXC.column_id,
+			Sort=CASE INDEXKEY_PROPERTY(IDXC.[object_id],IDXC.index_id,IDXC.index_column_id,'IsDescending')
+			WHEN 1 THEN 'DESC' WHEN 0 THEN 'ASC' ELSE '' END,
+			PrimaryKey=IDX.is_primary_key,
+			IndexName=IDX.Name
+			FROM sys.indexes IDX
+			INNER JOIN sys.index_columns IDXC
+			ON IDX.[object_id]=IDXC.[object_id]
+			AND IDX.index_id=IDXC.index_id
+			LEFT JOIN sys.key_constraints KC
+			ON IDX.[object_id]=KC.[parent_object_id]
+			AND IDX.index_id=KC.unique_index_id
+			INNER JOIN 
+			(
+				SELECT [object_id], Column_id, index_id=MIN(index_id)
+				FROM sys.index_columns
+				GROUP BY [object_id], Column_id
+			) IDXCUQ
+			ON IDXC.[object_id]=IDXCUQ.[object_id]
+			AND IDXC.Column_id=IDXCUQ.Column_id
+			AND IDXC.index_id=IDXCUQ.index_id
+		) IDX ON C.[object_id]=IDX.[object_id] AND C.column_id=IDX.column_id 
+		WHERE O.name = N'$tablename$' 
+	</select>
+
+</sqlMap>
+
+
+
+

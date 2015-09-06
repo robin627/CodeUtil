@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:osgi="http://www.springframework.org/schema/osgi"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd 
+         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd"
+	default-autowire="byName">
+<!-- 映射关系见
+	http://blog.csdn.net/leledboy/article/details/6324344
+ -->
+	<bean id="mysql2java" class="com.jala.tool.db2o.Mysql2JavaMapping">
+		<property name="typeMapping">
+			<map>
+			    <entry key="bit">
+					<value>boolean</value>
+				</entry>
+				<entry key="char">
+					<value>String</value>
+				</entry>
+				<entry key="varchar">
+					<value>String</value>
+				</entry>
+				<entry key="text">
+					<value>String</value>
+				</entry>
+				<entry key="date">
+					<value>Date</value>
+				</entry>
+				<entry key="time">
+					<value>Time</value>
+				</entry>
+				<entry key="year">
+					<value>Date</value>
+				</entry>
+				<entry key="datetime">
+					<value>Date</value>
+				</entry>
+				<entry key="tinyint">
+					<value>int</value>
+				</entry>
+				<entry key="smallint">
+					<value>int</value>
+				</entry>
+				<entry key="mediumint">
+					<value>int</value>
+				</entry>
+				<entry key="int">
+					<value>int</value>
+				</entry>
+				<entry key="bigint">
+					<value>long</value>
+				</entry>
+				<entry key="double">
+					<value>Double</value>
+				</entry>
+				<entry key="real">
+					<value>Double</value>
+				</entry>
+				<entry key="decimal">
+					<value>float</value>
+				</entry>
+				<entry key="numeric">
+					<value>float</value>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+</beans>

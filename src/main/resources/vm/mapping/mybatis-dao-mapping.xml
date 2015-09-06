@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="$!{table.entityName}Dao">
+
+	<typeAlias alias="$!{table.entityName}" type="$!{entityPackageName}.$!{table.entityName}" />
+    
+	<resultMap id="$!{table.entityName}-Result" class="$!{table.entityName}">
+#foreach( $field in $columns )
+	#if ( $field.isColumnIsNumeric())
+<result property="${field.camelPropertyName}" column="${field.columnName}" jdbcType="${field.columnType}" nullValue="0" />
+	#else
+<result property="${field.camelPropertyName}" column="${field.columnName}" jdbcType="${field.columnType}" />
+	#end	
+#end
+</resultMap>
+
+	<select id="$!{table.entityName}-SelectByKey" resultMap="$!{table.entityName}-Result">
+	<![CDATA[
+		select 
+#foreach( $field in $columns )
+#if ( $field.columnIsPrimaryKey != 'true')
+		$!{field.columnName},
+#end
+#end
+		$!{table.primaryKeyColumnName}
+		from $!{table.tableName} 
+		where $!{table.primaryKeyColumnName} = #value#
+	]]>
+	</select>
+	
+	<select id="$!{table.entityName}-SelectByObject" resultMap="$!{table.entityName}-Result">
+		select 
+#foreach( $field in $columns )
+#if ( $field.columnIsPrimaryKey != 'true')
+		$!{field.columnName},
+#end
+#end
+		$!{table.primaryKeyColumnName}
+		from $!{table.tableName} 
+		<dynamic prepend="WHERE">
+#foreach( $field in $columns ) 
+#if ( $field.isColumnIsNumeric())
+			<isNotEqual prepend="and" property="${field.camelPropertyName}" compareValue="0">
+		$!{field.columnName} = #$!{field.camelPropertyName}#
+			</isNotEqual>
+#else
+			<isNotNull prepend="and" property="${field.camelPropertyName}">
+		$!{field.columnName} = #$!{field.camelPropertyName}#
+			</isNotNull>
+#end
+#end
+		</dynamic>
+	</select>
+
+	<insert id="$!{table.entityName}-Insert" parameterClass="$!{table.entityName}">
+    <![CDATA[
+	INSERT INTO $!{table.tableName}(
+#foreach( $field in $columns )
+#if ( $field.columnIsPrimaryKey != 'true')
+#if ( $field.camelPropertyName != $!{table.versionIDColumnName})
+#if ( $field.camelPropertyName != $!{table.versionTimeColumnName})
+		$!{field.columnName},	
+#end
+#end
+#end
+#end
+#if (${table.versionTimeColumnName})
+		$!{table.versionTimeColumnName},
+#end
+#if (${table.versionIDColumnName})
+		$!{table.versionIDColumnName},
+#end
+		$!{table.primaryKeyColumnName}
+	)VALUES(	
+#foreach( $field in $columns )
+#if ( $field.columnIsPrimaryKey != 'true')
+#if ( $field.camelPropertyName != $!{table.versionIDColumnName})
+#if ( $field.camelPropertyName != $!{table.versionTimeColumnName})
+		#$!{field.camelPropertyName}#,
+#end
+#end
+#end
+#end
+#if (${table.versionTimeColumnName})
+		$!{dbGetTimeMethedName},
+#end
+#if (${table.versionIDColumnName})
+		1,
+#end		
+		#$!{table.primaryKeyName}#
+		)
+    ]]>
+	</insert>
+	
+	<delete id="$!{table.entityName}-DeleteByKey">
+	<![CDATA[
+		delete from $!{table.tableName} 
+		where $!{table.primaryKeyColumnName} = #value#
+	]]>
+	</delete>
+	
+	<delete id="$!{table.entityName}-DeleteByObject" parameterClass="$!{table.entityName}">
+	<![CDATA[
+		delete from $!{table.tableName} 
+		where $!{table.primaryKeyColumnName} = #$!{table.primaryKeyName}#
+	]]>
+	</delete>
+	
+	<update id="$!{table.entityName}-Update" parameterClass="$!{table.entityName}">
+	<![CDATA[
+	    update $!{table.tableName}
+	    set	    
+#foreach( $field in $columns )
+#if ( $field.columnIsPrimaryKey != 'true')
+#if ( $field.camelPropertyName != $!{table.versionIDColumnName})
+#if ( $field.camelPropertyName != $!{table.versionTimeColumnName})
+		$!{field.columnName} = #$!{field.camelPropertyName}#,	
+#end
+#end
+#end
+#end
+#if (${table.versionTimeColumnName})
+	    $!{table.versionTimeColumnName} = $!{dbGetTimeMethedName},
+#end
+#if (${table.versionIDColumnName})
+		$!{table.versionIDColumnName} = $!{table.versionIDColumnName} + 1
+#else
+		$!{table.primaryKeyColumnName} = $!{table.primaryKeyColumnName} 
+#end		
+		where $!{table.primaryKeyColumnName} = #$!{table.primaryKeyName}#
+#if (${table.versionIDColumnName})
+		and $!{table.versionIDColumnName} = #$!{table.versionIDColumnName}#
+#end
+	]]>
+	</update>
+
+</mapper>
